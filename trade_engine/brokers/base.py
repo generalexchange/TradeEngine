@@ -4,7 +4,10 @@ All broker implementations must inherit from this abstract class.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from trade_engine.execution.option_orders import OptionLeg
 
 
 class BrokerAdapter(ABC):
@@ -90,6 +93,56 @@ class BrokerAdapter(ABC):
     def broker_name(self) -> str:
         """Return broker name/identifier."""
         pass
+
+    async def submit_option_order(
+        self,
+        leg: "OptionLeg",
+        limit_price: Optional[float] = None,
+        **kwargs,
+    ) -> str:
+        """Submit a single-leg option order to the broker.
+
+        Args:
+            leg: Option leg to execute
+            limit_price: Optional limit price per contract
+            **kwargs: Additional broker-specific parameters
+
+        Returns:
+            Broker order ID
+
+        Raises:
+            BrokerError: If order submission fails
+
+        Note:
+            Default implementation raises NotImplementedError.
+            Brokers should override this method.
+        """
+        raise NotImplementedError("Option orders not supported by this broker")
+
+    async def submit_option_spread(
+        self,
+        legs: list["OptionLeg"],
+        limit_price: Optional[float] = None,
+        **kwargs,
+    ) -> str:
+        """Submit a multi-leg option spread order (atomic execution).
+
+        Args:
+            legs: List of option legs in the spread
+            limit_price: Optional net limit price for the spread
+            **kwargs: Additional broker-specific parameters
+
+        Returns:
+            Broker order ID
+
+        Raises:
+            BrokerError: If order submission fails
+
+        Note:
+            Default implementation raises NotImplementedError.
+            Brokers should override this method.
+        """
+        raise NotImplementedError("Option spreads not supported by this broker")
 
 
 class BrokerError(Exception):
